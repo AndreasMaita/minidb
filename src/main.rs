@@ -1,4 +1,4 @@
-use bplustree::{BPlusTree, InternalNode, LeafNode, Node};
+use bplustree::{BPlusTree, LeafNode, Node};
 use eframe::egui;
 
 mod bplustree;
@@ -14,7 +14,6 @@ fn main() -> Result<(), eframe::Error> {
 
 struct MyApp {
     tree: BPlusTree<String>,
-    key_input: String,
     value_input: String,
 }
 
@@ -23,7 +22,6 @@ impl Default for MyApp {
         let root = Node::Leaf(LeafNode::new(Vec::new()));
         Self {
             tree: BPlusTree::new(3, root),
-            key_input: String::new(),
             value_input: String::new(),
         }
     }
@@ -41,12 +39,9 @@ impl eframe::App for MyApp {
             });
 
             if ui.button("➕ Insert").clicked() {
-                let mut new_value = String::new();
-                if let Ok(value) = self.value_input.parse::<String>() {
-                    new_value = value;
-                    self.value_input.clear();
-                }
-                self.tree.insert_value(new_value);
+                let value = std::mem::take(&mut self.value_input);
+                self.tree.insert_value(value);
+                self.value_input.clear();
             }
 
             ui.separator();

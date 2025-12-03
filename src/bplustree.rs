@@ -1,24 +1,40 @@
-use std::{ops::Div, vec};
+use std::vec;
 
 use rand::random;
 
+/// Top–level data structure representing the whole B+ tree.
+/// `order` is the maximum number of keys allowed in a single node.
+/// The insert algorithm maintains this invariant by splitting nodes when they overflow.
 pub struct BPlusTree<V> {
     pub root: Node<V>,
     order: usize,
 }
 
+/// A single node in the B+ tree, either an internal node or a leaf node.
 pub enum Node<V> {
     Internal(InternalNode<V>),
     Leaf(LeafNode<V>),
 }
 
+/// Internal node of the B+ tree.
+///
+/// `keys` partition the key space into ranges, each handled by one child:
+/// - `children[0]` contains all keys `< keys[0]`
+/// - `children[i]` contains all keys `>= keys[i - 1]` and `< keys[i]`
+/// - `children[last]` contains all keys `>= keys[last_key]`
+///
+/// `keys` is always sorted in ascending order.
+/// `children` holds boxed nodes so they can be stored on the heap and shared by the tree.
 pub struct InternalNode<V> {
-    // die Verknüpfung zwischen den werten ist durch die keys und die position in den childrens
-    // gegeben.
     pub keys: Vec<u8>,
     pub children: Vec<Box<Node<V>>>,
 }
 
+/// Leaf node of the B+ tree.
+///
+/// Stores key–value pairs in two parallel vectors. The index links keys and values:
+/// `keys[i]` is the key for `values[i]`.
+/// `keys` is kept sorted so lookups and inserts can use binary / positional search.
 pub struct LeafNode<V> {
     pub values: Vec<V>,
     pub keys: Vec<u8>,
@@ -29,10 +45,19 @@ where
     V: std::fmt::Debug + Clone,
 {
     pub fn new(order: usize, root: Node<V>) -> Self {
-        // implelemntation
         BPlusTree { order, root }
     }
 
+    /// Recursive helper that inserts a single key–value pair into the subtree rooted at `node`.
+    ///
+    /// Traverses down to the appropriate leaf, inserts the key/value there, and then propagates
+    /// splits back up the call stack. If the current node overflows `order` keys, it is split
+    /// and the middle key is *promoted* to the caller.
+    ///
+    /// Returns:
+    /// - `None` if no split was necessary
+    /// - `Some((promoted_key, new_sibling))` if this node was split and the parent must insert
+    ///    `promoted_key` and attach `new_sibling` as a new child.
     fn insert_recursive(
         node: &mut Node<V>,
         key: u8,
@@ -41,11 +66,9 @@ where
     ) -> Option<(u8, Box<Node<V>>)> {
         match node {
             Node::Leaf(leaf) => {
-                // find the correct node to add the new_key
                 leaf.add(key, value);
 
                 if leaf.keys.len() > order {
-                    // leaf is full, need to split and promote the key
                     let mid = order.div_ceil(2);
                     let right_keys = leaf.keys.split_off(mid);
                     let right_values = leaf.values.split_off(mid);
@@ -99,7 +122,9 @@ where
         }
     }
 
-    /// this method is only for debugging purposes or other visual possibilities to show
+    /// Traverses the tree until it reaches the leaf that should contain `key`.
+    /// This is mainly useful for debugging and visualisation.    
+    #[allow(dead_code)]
     pub fn find_leaf<'a>(&mut self, node: &'a mut Node<V>, key: u8) -> &'a mut LeafNode<V> {
         match node {
             Node::Leaf(leaf) => leaf,
@@ -114,8 +139,11 @@ where
         }
     }
 
+    /// Public entry point for inserts with an auto-generated key.
+    ///
+    /// Starts the recursive insert process at the root. If the root itself is split,
+    /// this method creates a new internal root with two children (old root and new sibling).
     pub fn insert_value(&mut self, value: V) {
-        // First, check if we need to split
         let new_key = random::<u8>();
 
         if let Some((promoted_key, new_child)) =
@@ -135,35 +163,6 @@ where
             });
         }
     }
-
-    // Changed from self to &self - don't consume the tree!
-    pub fn print(&self) {
-        println!("B+ Tree (order: {})", self.order);
-        self.print_node(&self.root, 0);
-    }
-
-    // Helper function to recursively print nodes
-    fn print_node(&self, node: &Node<V>, level: usize) {
-        let indent = "  ".repeat(level);
-
-        match node {
-            Node::Internal(internal) => {
-                println!("{}Internal Node:", indent);
-                println!("{}  Children ({}): ", indent, internal.children.len());
-                println!("{}  Keys: {:?}", indent, internal.keys);
-
-                for (i, child) in internal.children.iter().enumerate() {
-                    println!("{}  Child {}:", indent, i);
-                    self.print_node(child, level + 2);
-                }
-            }
-            Node::Leaf(leaf) => {
-                println!("{}Leaf Node:", indent);
-                println!("{}  Values: {:?}", indent, leaf.values);
-                println!("{}  Keys: {:?}", indent, leaf.keys);
-            }
-        }
-    }
 }
 
 impl<V> LeafNode<V> {
@@ -174,6 +173,7 @@ impl<V> LeafNode<V> {
         }
     }
 
+    /// Inserts a key–value pair into this leaf, keeping `keys` and `values` sorted by key.
     pub fn add(&mut self, key: u8, value: V) {
         let insertion_idx = self
             .keys
@@ -183,25 +183,5 @@ impl<V> LeafNode<V> {
 
         self.keys.insert(insertion_idx, key);
         self.values.insert(insertion_idx, value);
-    }
-}
-
-impl<V> InternalNode<V> {
-    pub fn new(keys: Vec<u8>) -> Self {
-        InternalNode {
-            keys,
-            children: Vec::new(),
-        }
-    }
-
-    pub fn add(&mut self, key: u8, child: Box<Node<V>>) {
-        let insertion_idx = self
-            .keys
-            .iter()
-            .position(|&k| key < k)
-            .unwrap_or(self.keys.len());
-
-        self.keys.insert(insertion_idx, key);
-        self.children.insert(insertion_idx, child);
     }
 }

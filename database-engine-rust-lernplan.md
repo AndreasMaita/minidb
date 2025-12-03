@@ -14,12 +14,8 @@ jjjj# Database Engine in Rust - 16 Stunden Lernplan
 
 **Ziel**: Rust-Projekt initialisieren und B+ Tree Datenstruktur verstehen
 
-**Was zu tun ist**:
-
-1. Neues Rust-Projekt erstellen: `cargo new minidb --bin`
-2. Abhängigkeiten in `Cargo.toml` hinzufügen
-3. Grundlegende B+ Tree Node-Strukturen definieren
-4. Einfache Insert/Search Operationen implementieren
+1. Grundlegende B+ Tree Node-Strukturen definieren
+2. Einfache Insert/Search Operationen implementieren
 
 **Konkrete Schritte**:
 
@@ -34,39 +30,8 @@ bincode = "1.3"
 **Hilfe-Prompt**:
 
 ```
-Ich arbeite an Phase 1.1 des Database Engine Projekts. Ich bin bei [BESCHREIBE DEIN PROBLEM] nicht weitergekommen. Hier ist mein aktueller Code:
-[FÜGE DEINEN CODE EIN]
-
-Kannst du mir helfen, das Problem zu lösen und den nächsten Schritt erklären?
-```
 
 ### Aufgabe 1.2: B+ Tree Node Implementation (1.5h)
-
-**Ziel**: Interne und Leaf Nodes mit Key-Value Storage implementieren
-
-**Was zu tun ist**:
-
-1. `InternalNode` und `LeafNode` Structs definieren
-2. Key-Ordering für verschiedene Datentypen
-3. Node Split-Logik bei Overflow
-4. Parent-Child Pointer Management
-
-**Key Concepts**:
-
-- Maximale Keys pro Node (z.B. 4 für Testing)
-- Sorted Key Arrays
-- Child Pointer Arrays für Internal Nodes
-
-**Hilfe-Prompt**:
-
-```
-Ich implementiere B+ Tree Nodes (Phase 1.2). Mein Problem ist bei [NODE SPLITTING / KEY INSERTION / POINTER MANAGEMENT].
-
-Aktueller Code:
-[CODE]
-
-Was mache ich falsch und wie löse ich [SPEZIFISCHES PROBLEM]?
-```
 
 ### Aufgabe 1.3: Page-based Storage System (1h)
 
@@ -88,6 +53,7 @@ Was mache ich falsch und wie löse ich [SPEZIFISCHES PROBLEM]?
 **Hilfe-Prompt**:
 
 ```
+
 Ich arbeite an dem Page Storage System (Phase 1.3). Problem bei [SERIALIZATION / FILE I/O / PAGE MANAGEMENT]:
 
 Code:
@@ -96,6 +62,7 @@ Code:
 Fehlerdetails: [ERROR MESSAGE]
 
 Wie kann ich das lösen?
+
 ```
 
 ### Aufgabe 1.4: Integration & Basic Testing (0.5h)
@@ -119,6 +86,7 @@ Wie kann ich das lösen?
 **Hilfe-Prompt**:
 
 ```
+
 Meine Storage Layer Tests (Phase 1.4) schlagen fehl:
 
 Test: [TEST NAME]
@@ -126,7 +94,8 @@ Error: [ERROR]
 Code: [RELEVANT CODE]
 
 Wie debugge ich das Problem und was läuft schief?
-```
+
+````
 
 ---
 
@@ -154,7 +123,7 @@ enum Token {
     Operator(String),     // =, <, >, AND, OR
     Punctuation(char),    // (, ), ,, ;
 }
-```
+````
 
 **Hilfe-Prompt**:
 
