@@ -1,7 +1,7 @@
-use bplustree::{BPlusTree, LeafNode, Node};
+use btree::node::{BPlusTree, LeafNode, Node};
 use eframe::egui;
 
-mod bplustree;
+mod btree;
 
 fn main() -> Result<(), eframe::Error> {
     let options = eframe::NativeOptions::default();
@@ -15,6 +15,7 @@ fn main() -> Result<(), eframe::Error> {
 struct MyApp {
     tree: BPlusTree<String>,
     value_input: String,
+    key_input: String,
 }
 
 impl Default for MyApp {
@@ -23,6 +24,7 @@ impl Default for MyApp {
         Self {
             tree: BPlusTree::new(3, root),
             value_input: String::new(),
+            key_input: String::new(),
         }
     }
 }
@@ -45,6 +47,20 @@ impl eframe::App for MyApp {
             }
 
             ui.separator();
+            ui.horizontal(|ui| {
+                ui.label("Search key: ");
+                ui.text_edit_singleline(&mut self.key_input);
+            });
+            if ui.button("Search").clicked() {
+                let key = std::mem::take(&mut self.key_input);
+                let value = self.tree.get(key.parse::<u8>().unwrap());
+
+                match value {
+                    None => self.key_input = "nothing found!".to_string(),
+                    Some(val) => self.key_input = val.to_string(),
+                }
+            }
+
             ui.heading("Tree Structure:");
 
             egui::ScrollArea::both().show(ui, |ui| {

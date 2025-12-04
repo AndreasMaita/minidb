@@ -1,44 +1,8 @@
+pub mod node;
+use node::{BPlusTree, InternalNode, LeafNode, Node};
 use std::vec;
 
 use rand::random;
-
-/// Top–level data structure representing the whole B+ tree.
-/// `order` is the maximum number of keys allowed in a single node.
-/// The insert algorithm maintains this invariant by splitting nodes when they overflow.
-pub struct BPlusTree<V> {
-    pub root: Node<V>,
-    order: usize,
-}
-
-/// A single node in the B+ tree, either an internal node or a leaf node.
-pub enum Node<V> {
-    Internal(InternalNode<V>),
-    Leaf(LeafNode<V>),
-}
-
-/// Internal node of the B+ tree.
-///
-/// `keys` partition the key space into ranges, each handled by one child:
-/// - `children[0]` contains all keys `< keys[0]`
-/// - `children[i]` contains all keys `>= keys[i - 1]` and `< keys[i]`
-/// - `children[last]` contains all keys `>= keys[last_key]`
-///
-/// `keys` is always sorted in ascending order.
-/// `children` holds boxed nodes so they can be stored on the heap and shared by the tree.
-pub struct InternalNode<V> {
-    pub keys: Vec<u8>,
-    pub children: Vec<Box<Node<V>>>,
-}
-
-/// Leaf node of the B+ tree.
-///
-/// Stores key–value pairs in two parallel vectors. The index links keys and values:
-/// `keys[i]` is the key for `values[i]`.
-/// `keys` is kept sorted so lookups and inserts can use binary / positional search.
-pub struct LeafNode<V> {
-    pub values: Vec<V>,
-    pub keys: Vec<u8>,
-}
 
 impl<V> BPlusTree<V>
 where
@@ -122,10 +86,22 @@ where
         }
     }
 
+    /// returns the value for a specific key, if found.
+    #[allow(dead_code)]
+    pub fn get(&self, key: u8) -> Option<&V> {
+        // first find the corresponding leaf node.
+        let leaf = self.find_leaf(&self.root, key);
+        let position = leaf.keys.iter().position(|&k| key == k);
+
+        match position {
+            None => None,
+            Some(index) => Some(&leaf.values[index]),
+        }
+    }
+
     /// Traverses the tree until it reaches the leaf that should contain `key`.
     /// This is mainly useful for debugging and visualisation.    
-    #[allow(dead_code)]
-    pub fn find_leaf<'a>(&mut self, node: &'a mut Node<V>, key: u8) -> &'a mut LeafNode<V> {
+    pub fn find_leaf<'a>(&self, node: &'a Node<V>, key: u8) -> &'a LeafNode<V> {
         match node {
             Node::Leaf(leaf) => leaf,
             Node::Internal(internal) => {
@@ -134,7 +110,7 @@ where
                     .iter()
                     .position(|&k| key < k)
                     .unwrap_or(internal.keys.len());
-                self.find_leaf(internal.children[idx].as_mut(), key)
+                self.find_leaf(internal.children[idx].as_ref(), key)
             }
         }
     }
