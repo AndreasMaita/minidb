@@ -1,3 +1,5 @@
+pub type KeySize = u32;
+
 /// Top–level data structure representing the whole B+ tree.
 /// `order` is the maximum number of keys allowed in a single node.
 /// The insert algorithm maintains this invariant by splitting nodes when they overflow.
@@ -22,7 +24,7 @@ pub enum Node<V> {
 /// `keys` is always sorted in ascending order.
 /// `children` holds boxed nodes so they can be stored on the heap and shared by the tree.
 pub struct InternalNode<V> {
-    pub keys: Vec<u8>,
+    pub keys: Vec<KeySize>,
     pub children: Vec<Box<Node<V>>>,
 }
 
@@ -33,5 +35,5 @@ pub struct InternalNode<V> {
 /// `keys` is kept sorted so lookups and inserts can use binary / positional search.
 pub struct LeafNode<V> {
     pub values: Vec<V>,
-    pub keys: Vec<u8>,
+    pub keys: Vec<KeySize>,
 }

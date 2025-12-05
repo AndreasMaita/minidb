@@ -1,6 +1,6 @@
 pub mod models;
 
-use crate::models::{BPlusTree, InternalNode, LeafNode, Node};
+use crate::models::{BPlusTree, InternalNode, KeySize, LeafNode, Node};
 use rand::random;
 use std::vec;
 
@@ -24,10 +24,10 @@ where
     ///    `promoted_key` and attach `new_sibling` as a new child.
     fn insert_recursive(
         node: &mut Node<V>,
-        key: u8,
+        key: KeySize,
         value: V,
         order: usize,
-    ) -> Option<(u8, Box<Node<V>>)> {
+    ) -> Option<(KeySize, Box<Node<V>>)> {
         match node {
             Node::Leaf(leaf) => {
                 leaf.add(key, value);
@@ -88,7 +88,7 @@ where
 
     /// returns the value for a specific key, if found.
     #[allow(dead_code)]
-    pub fn get(&self, key: u8) -> Option<&V> {
+    pub fn get(&self, key: KeySize) -> Option<&V> {
         // first find the corresponding leaf node.
         let leaf = self.find_leaf(&self.root, key);
         let position = leaf.keys.iter().position(|&k| key == k);
@@ -101,7 +101,7 @@ where
 
     /// Traverses the tree until it reaches the leaf that should contain `key`.
     /// This is mainly useful for debugging and visualisation.    
-    pub fn find_leaf<'a>(&self, node: &'a Node<V>, key: u8) -> &'a LeafNode<V> {
+    pub fn find_leaf<'a>(&self, node: &'a Node<V>, key: KeySize) -> &'a LeafNode<V> {
         match node {
             Node::Leaf(leaf) => leaf,
             Node::Internal(internal) => {
@@ -120,7 +120,7 @@ where
     /// Starts the recursive insert process at the root. If the root itself is split,
     /// this method creates a new internal root with two children (old root and new sibling).
     pub fn insert_value(&mut self, value: V) {
-        let new_key = random::<u8>();
+        let new_key = random::<KeySize>();
 
         if let Some((promoted_key, new_child)) =
             Self::insert_recursive(&mut self.root, new_key, value, self.order)
@@ -142,7 +142,7 @@ where
 }
 
 impl<V> LeafNode<V> {
-    pub fn new(keys: Vec<u8>) -> Self {
+    pub fn new(keys: Vec<KeySize>) -> Self {
         LeafNode {
             keys,
             values: Vec::new(),
@@ -150,7 +150,7 @@ impl<V> LeafNode<V> {
     }
 
     /// Inserts a key–value pair into this leaf, keeping `keys` and `values` sorted by key.
-    pub fn add(&mut self, key: u8, value: V) {
+    pub fn add(&mut self, key: KeySize, value: V) {
         let insertion_idx = self
             .keys
             .iter()
