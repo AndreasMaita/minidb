@@ -1,8 +1,8 @@
-pub mod node;
-use node::{BPlusTree, InternalNode, LeafNode, Node};
-use std::vec;
+pub mod models;
 
+use crate::models::{BPlusTree, InternalNode, LeafNode, Node};
 use rand::random;
+use std::vec;
 
 impl<V> BPlusTree<V>
 where

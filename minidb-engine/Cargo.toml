@@ -1,0 +1,9 @@
+[package]
+name = "minidb-engine"
+version = "0.1.0"
+edition = "2021"
+description = "minimalistic database engine"
+license = "MIT"
+
+[dependencies]
+rand = "*"
