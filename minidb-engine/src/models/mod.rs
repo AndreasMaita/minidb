@@ -6,6 +6,8 @@ pub type KeySize = u32;
 pub struct BPlusTree<V> {
     pub root: Node<V>,
     pub order: usize,
+    pub min_elements: usize,
+    pub arena: Vec<Node<V>>,
 }
 
 /// A single node in the B+ tree, either an internal node or a leaf node.
@@ -36,4 +38,13 @@ pub struct InternalNode<V> {
 pub struct LeafNode<V> {
     pub values: Vec<V>,
     pub keys: Vec<KeySize>,
+}
+
+pub enum DeleteResult<K> {
+    NotFound,
+    Ok,
+    MinChanged { new_min: K },
+    Underflow { new_min_opt: Option<K> },
+    Empty, // only happens when no elements are left in the leaf, and no borrowing was possible in
+           // earlier iterations
 }

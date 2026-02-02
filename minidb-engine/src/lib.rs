@@ -1,6 +1,6 @@
 pub mod models;
 
-use crate::models::{BPlusTree, InternalNode, KeySize, LeafNode, Node};
+use crate::models::{BPlusTree, DeleteResult, InternalNode, KeySize, LeafNode, Node};
 use rand::random;
 use std::vec;
 
@@ -8,8 +8,13 @@ impl<V> BPlusTree<V>
 where
     V: std::fmt::Debug + Clone,
 {
-    pub fn new(order: usize, root: Node<V>) -> Self {
-        BPlusTree { order, root }
+    pub fn new(min_elements: usize, order: usize, root: Node<V>, arena: Vec<Node<V>>) -> Self {
+        BPlusTree {
+            order,
+            root,
+            arena,
+            min_elements,
+        }
     }
 
     /// Recursive helper that inserts a single key–value pair into the subtree rooted at `node`.
@@ -86,6 +91,109 @@ where
         }
     }
 
+    fn delete_recursive(
+        node: &mut Node<V>,
+        key: KeySize,
+        order: usize,
+        min_elements: usize,
+    ) -> DeleteResult<KeySize> {
+        match node {
+            Node::Leaf(leaf) => {
+                let pos = leaf.keys.iter().position(|&k| k == key).unwrap();
+                leaf.keys.remove(pos);
+                leaf.values.remove(pos);
+
+                if leaf.keys.is_empty() {
+                    // Zwischenstand: kein Merge/Borrow -> Parent macht NICHTS
+                    return DeleteResult::Empty;
+                }
+                if pos == 0 {
+                    if leaf.keys.len() < min_elements {
+                        // space in keys is less than allowed
+                        // should borrow from sibling
+                        return DeleteResult::Underflow {
+                            new_min_opt: Option::Some(leaf.keys[0]),
+                        };
+                    }
+
+                    // Min-Key des Leafs hat sich geändert
+                    return DeleteResult::MinChanged {
+                        // child_index füllt später der Parent
+                        new_min: leaf.keys[0],
+                    };
+                }
+
+                DeleteResult::Ok
+            }
+            Node::Internal(internal) => {
+                let idx = internal
+                    .keys
+                    .iter()
+                    .position(|&k| key < k)
+                    .unwrap_or(internal.keys.len());
+
+                let child = internal.children[idx].as_mut();
+
+                let result = Self::delete_recursive(child, key, order, min_elements);
+
+                match result {
+                    DeleteResult::Empty => {
+                        if idx > 0 {
+                            println!("removing the key {}", idx - 1);
+                            internal.keys.remove(idx - 1);
+                            println!("removing the child {}", idx);
+                        }
+                        internal.children.remove(idx);
+
+                        // reassign the internal node to the only child it has left
+                        if internal.children.len() == 1 && internal.keys.len() == 1 {
+                            let only_child = *internal.children.remove(0);
+                            *node = only_child;
+
+                            return DeleteResult::Ok;
+                        }
+
+                        internal.keys
+                        return DeleteResult::Ok;
+                    }
+                    DeleteResult::MinChanged { new_min } => {
+                        if idx > 0 {
+                            internal.keys[idx - 1] = new_min;
+                        }
+                        return DeleteResult::Ok;
+                    }
+                    DeleteResult::NotFound => DeleteResult::NotFound,
+                    DeleteResult::Ok => DeleteResult::Ok,
+                    DeleteResult::Underflow { new_min_opt } => match new_min_opt {
+                        Option::None => {
+                            // Underflow, try to borrow one from the sibling
+                            DeleteResult::Ok
+                        }
+                        Option::Some(new_min) => {
+                            // Underflow, and assign new min
+                            if idx > 0 {
+                                internal.keys[idx - 1] = new_min;
+                            }
+
+                            // now try to borrow from sibling
+                            DeleteResult::Ok
+                        }
+                    },
+                }
+            }
+        }
+    }
+
+    pub fn update(&mut self, key: KeySize, value: V) {
+        let leaf = Self::find_leaf_mut(&mut self.root, key);
+        let position = leaf.keys.iter().position(|&k| key == k);
+
+        match position {
+            None => None,
+            Some(index) => Some(leaf.values[index] = value),
+        };
+    }
+
     /// returns the value for a specific key, if found.
     #[allow(dead_code)]
     pub fn get(&self, key: KeySize) -> Option<&V> {
@@ -96,6 +204,22 @@ where
         match position {
             None => None,
             Some(index) => Some(&leaf.values[index]),
+        }
+    }
+
+    /// Traverses the tree until it reaches the leaf that should contain `key`.
+    /// This is mainly useful for debugging and visualisation.    
+    pub fn find_leaf_mut<'a>(node: &'a mut Node<V>, key: KeySize) -> &'a mut LeafNode<V> {
+        match node {
+            Node::Leaf(leaf) => leaf,
+            Node::Internal(internal) => {
+                let idx = internal
+                    .keys
+                    .iter()
+                    .position(|&k| key < k)
+                    .unwrap_or(internal.keys.len());
+                Self::find_leaf_mut(internal.children[idx].as_mut(), key)
+            }
         }
     }
 
@@ -113,6 +237,10 @@ where
                 self.find_leaf(internal.children[idx].as_ref(), key)
             }
         }
+    }
+
+    pub fn delete_value(&mut self, key: KeySize) {
+        Self::delete_recursive(&mut self.root, key, self.order, self.min_elements);
     }
 
     /// Public entry point for inserts with an auto-generated key.

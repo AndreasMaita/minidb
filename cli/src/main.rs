@@ -10,6 +10,7 @@ fn main() {
     let start_repl = std::env::args().len() < 2;
 
     if start_repl {
+        println!("Welcome to the minidb REPL!");
         loop {
             let line = rl.readline("> ");
             let line = match line {

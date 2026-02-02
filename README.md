@@ -29,7 +29,7 @@ The focus is on understanding data structures, tree balancing, and Rust ownershi
   - Creation of a new root when the old root splits
 - Keys inside nodes are kept **sorted**, both in internal nodes and leaf nodes.
 
-At the moment, keys are `u8` (randomly generated) and values are generic `V` (with `Debug + Clone` bounds).
+At the moment, keys are defined by the type `KeySize` (randomly generated) and values are generic `V` (with `Debug + Clone` bounds).
 
 ## Data Structure Overview
 
@@ -103,11 +103,11 @@ This generates a random `u8` key and starts the recursive insertion at the root.
 - [x] B+ Tree data structures (`InternalNode`, `LeafNode`)
 - [x] Insert with recursive splitting
 - [x] Root split handling
-- [ ] **Get operation** (`get(&self, key: u8) -> Option<&V>`)
-- [ ] **Update operation** (update value for existing key)
+- [x] **Get operation** (`get(&self, key: u8) -> Option<&V>`)
+- [x] **Update operation** (update value for existing key)
 - [ ] **Delete operation** (with merge/rebalance logic)
 - [ ] Handle duplicate keys (overwrite vs. reject)
-- [ ] Configurable key type (beyond `u8`)
+- [x] Configurable key type (beyond `u8`)
 - [ ] Unit tests for insert, get, update, delete
 
 ### Phase 2: Database Table Layer
