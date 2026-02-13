@@ -153,7 +153,6 @@ where
                             return DeleteResult::Ok;
                         }
 
-                        internal.keys
                         return DeleteResult::Ok;
                     }
                     DeleteResult::MinChanged { new_min } => {
