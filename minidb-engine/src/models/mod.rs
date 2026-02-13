@@ -1,8 +1,11 @@
+use serde::{Deserialize, Serialize};
+
 pub type KeySize = u32;
 
 /// Top–level data structure representing the whole B+ tree.
 /// `order` is the maximum number of keys allowed in a single node.
 /// The insert algorithm maintains this invariant by splitting nodes when they overflow.
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct BPlusTree<V> {
     pub root: Node<V>,
     pub order: usize,
@@ -11,6 +14,8 @@ pub struct BPlusTree<V> {
 }
 
 /// A single node in the B+ tree, either an internal node or a leaf node.
+#[derive(Serialize, Deserialize, Clone, Debug)]
+
 pub enum Node<V> {
     Internal(InternalNode<V>),
     Leaf(LeafNode<V>),
@@ -25,6 +30,7 @@ pub enum Node<V> {
 ///
 /// `keys` is always sorted in ascending order.
 /// `children` holds boxed nodes so they can be stored on the heap and shared by the tree.
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct InternalNode<V> {
     pub keys: Vec<KeySize>,
     pub children: Vec<Box<Node<V>>>,
@@ -35,11 +41,12 @@ pub struct InternalNode<V> {
 /// Stores key–value pairs in two parallel vectors. The index links keys and values:
 /// `keys[i]` is the key for `values[i]`.
 /// `keys` is kept sorted so lookups and inserts can use binary / positional search.
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct LeafNode<V> {
     pub values: Vec<V>,
     pub keys: Vec<KeySize>,
 }
-
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum DeleteResult<K> {
     NotFound,
     Ok,

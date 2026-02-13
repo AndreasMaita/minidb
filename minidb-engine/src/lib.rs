@@ -1,8 +1,8 @@
 pub mod models;
+pub mod wasm;
 
 use crate::models::{BPlusTree, DeleteResult, InternalNode, KeySize, LeafNode, Node};
 use rand::random;
-use std::vec;
 
 impl<V> BPlusTree<V>
 where
