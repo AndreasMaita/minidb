@@ -138,7 +138,7 @@ where
 
                 let child = internal.children[idx].as_mut();
 
-                let result = Self::delete_recursive(child, key, order, min_elements);
+                let mut result = Self::delete_recursive(child, key, order, min_elements);
 
                 match result {
                     DeleteResult::Empty => {
@@ -201,7 +201,16 @@ where
                                             internal.keys.insert(idx, leaf.keys[0]);
 
                                             // insert borrowed value and key into child
-                                            let current_child 
+                                            match internal.children[idx].as_mut() {
+                                                Node::Leaf(child_leaf) => {
+                                                    child_leaf.keys.push(sibling_new_leaf);
+                                                    child_leaf.values.push(sibling_borrow_value);
+                                                    return DeleteResult::Ok;
+                                                }
+                                                Node::Internal(_) => {
+                                                    return DeleteResult::Ok;
+                                                }
+                                            }
                                         }
                                     }
                                     Node::Internal(internal) => {
