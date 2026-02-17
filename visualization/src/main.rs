@@ -36,64 +36,66 @@ impl Default for MyApp {
 impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("B+ Tree Visualizer");
+            egui::ScrollArea::vertical().show(ui, |ui| {
+                ui.heading("B+ Tree Visualizer");
 
-            ui.horizontal(|ui| {
-                ui.label("Value: ");
-                ui.text_edit_singleline(&mut self.value_input);
+                ui.horizontal(|ui| {
+                    ui.label("Value: ");
+                    ui.text_edit_singleline(&mut self.value_input);
 
-                if ui.button("➕ Insert").clicked() {
-                    let value = std::mem::take(&mut self.value_input);
-                    self.tree.insert_value(MyRow {
-                        name: (value),
-                        age: (5),
-                    });
-                    self.value_input.clear();
-                }
-                ui.label("Search key: ");
-                ui.text_edit_singleline(&mut self.key_input);
-                if ui.button("Search").clicked() {
-                    let key = std::mem::take(&mut self.key_input);
-                    let value = self.tree.get(key.parse::<KeySize>().unwrap());
-
-                    match value {
-                        None => self.key_input = "nothing found!".to_string(),
-                        Some(val) => self.key_input = val.to_string(),
+                    if ui.button("➕ Insert").clicked() {
+                        let value = std::mem::take(&mut self.value_input);
+                        self.tree.insert_value(MyRow {
+                            name: (value),
+                            age: (5),
+                        });
+                        self.value_input.clear();
                     }
-                }
-            });
-            ui.separator();
-            ui.horizontal(|ui| {
-                ui.label("replace key: ");
-                ui.text_edit_singleline(&mut self.key_input);
-                ui.label("with Value: ");
-                ui.text_edit_singleline(&mut self.update_input);
-                if ui.button("update").clicked() {
-                    let key = std::mem::take(&mut self.key_input);
-                    let obj = MyRow {
-                        name: self.update_input.clone(),
-                        age: 0,
-                    };
+                    ui.label("Search key: ");
+                    ui.text_edit_singleline(&mut self.key_input);
+                    if ui.button("Search").clicked() {
+                        let key = std::mem::take(&mut self.key_input);
+                        let value = self.tree.get(key.parse::<KeySize>().unwrap());
 
-                    self.tree
-                        .update(key.parse::<KeySize>().unwrap(), obj.clone());
-                }
-            });
+                        match value {
+                            None => self.key_input = "nothing found!".to_string(),
+                            Some(val) => self.key_input = val.to_string(),
+                        }
+                    }
+                });
+                ui.separator();
+                ui.horizontal(|ui| {
+                    ui.label("replace key: ");
+                    ui.text_edit_singleline(&mut self.key_input);
+                    ui.label("with Value: ");
+                    ui.text_edit_singleline(&mut self.update_input);
+                    if ui.button("update").clicked() {
+                        let key = std::mem::take(&mut self.key_input);
+                        let obj = MyRow {
+                            name: self.update_input.clone(),
+                            age: 0,
+                        };
 
-            ui.separator();
-            ui.horizontal(|ui| {
-                ui.label("delete key: ");
-                ui.text_edit_singleline(&mut self.key_input);
+                        self.tree
+                            .update(key.parse::<KeySize>().unwrap(), obj.clone());
+                    }
+                });
 
-                if ui.button("delete").clicked() {
-                    let key = std::mem::take(&mut self.key_input);
-                    self.tree.delete_value(key.parse::<KeySize>().unwrap());
-                }
-            });
-            ui.separator();
-            ui.heading("Tree Structure:");
-            egui::ScrollArea::both().show(ui, |ui| {
-                self.display_tree_node(ui, &self.tree.root, 0);
+                ui.separator();
+                ui.horizontal(|ui| {
+                    ui.label("delete key: ");
+                    ui.text_edit_singleline(&mut self.key_input);
+
+                    if ui.button("delete").clicked() {
+                        let key = std::mem::take(&mut self.key_input);
+                        self.tree.delete_value(key.parse::<KeySize>().unwrap());
+                    }
+                });
+                ui.separator();
+                ui.heading("Tree Structure:");
+                egui::ScrollArea::both().show(ui, |ui| {
+                    self.display_tree_node(ui, &self.tree.root, 0);
+                });
             });
         });
     }
@@ -106,18 +108,18 @@ impl MyApp {
     {
         match node {
             Node::Internal(internal) => {
-                ui.vertical(|ui| {
+                ui.horizontal(|ui| {
                     // Draw the internal node as a box
                     egui::Frame::group(ui.style())
-                        .fill(egui::Color32::from_rgb(150, 150, 150))
+                        .fill(egui::Color32::from_rgb(150, 150, 255))
                         .show(ui, |ui| {
                             ui.label(format!("Internal: {:?}", internal.keys));
                         });
 
                     // Draw children horizontally
-                    ui.horizontal(|ui| {
+                    ui.vertical(|ui| {
                         for (i, child) in internal.children.iter().enumerate() {
-                            ui.vertical(|ui| {
+                            ui.horizontal(|ui| {
                                 ui.label(format!("↓ {}", i));
                                 self.display_tree_node(ui, child, level + 1);
                             });

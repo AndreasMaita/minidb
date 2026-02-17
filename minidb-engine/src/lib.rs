@@ -1,8 +1,8 @@
 pub mod models;
-pub mod wasm;
 
 use crate::models::{BPlusTree, DeleteResult, InternalNode, KeySize, LeafNode, Node};
 use rand::random;
+use std::vec;
 
 impl<V> BPlusTree<V>
 where
@@ -107,15 +107,19 @@ where
                     // Zwischenstand: kein Merge/Borrow -> Parent macht NICHTS
                     return DeleteResult::Empty;
                 }
-                if pos == 0 {
-                    if leaf.keys.len() < min_elements {
-                        // space in keys is less than allowed
-                        // should borrow from sibling
+
+                if leaf.keys.len() < min_elements {
+                    // space in keys is less than allowed
+                    // should borrow from sibling
+                    if pos == 0 {
                         return DeleteResult::Underflow {
                             new_min_opt: Option::Some(leaf.keys[0]),
                         };
                     }
+                    return DeleteResult::Underflow { new_min_opt: None };
+                }
 
+                if pos == 0 {
                     // Min-Key des Leafs hat sich geändert
                     return DeleteResult::MinChanged {
                         // child_index füllt später der Parent
@@ -142,6 +146,9 @@ where
                             println!("removing the key {}", idx - 1);
                             internal.keys.remove(idx - 1);
                             println!("removing the child {}", idx);
+                        } else {
+                            println!("removing the key {}", idx);
+                            internal.keys.remove(idx);
                         }
                         internal.children.remove(idx);
 
@@ -165,11 +172,51 @@ where
                     DeleteResult::Ok => DeleteResult::Ok,
                     DeleteResult::Underflow { new_min_opt } => match new_min_opt {
                         Option::None => {
+                            println!("underflow");
                             // Underflow, try to borrow one from the sibling
+                            println!("{}", internal.keys.len() >= idx);
+                            if internal.keys.len() >= idx {
+                                let sibling = internal.children[idx + 1].as_mut();
+                                match sibling {
+                                    Node::Leaf(leaf) => {
+                                        // If the sibling has not enough elements, no borrowing will
+                                        // happen.
+                                        println!(
+                                            "sibling is leaf with condition {}, len {}, min_elements {},",
+                                            leaf.keys.len() <= min_elements,
+                                            leaf.keys.len(),
+                                            min_elements,
+                                        );
+                                        if leaf.keys.len() <= min_elements {
+                                            println!("sibling does not have enough elements");
+                                            return DeleteResult::Ok;
+                                        } else {
+                                            println!("sibling has enough elements");
+                                            // remove the borrowed key from sibling
+                                            let sibling_new_leaf = leaf.keys.remove(0);
+                                            let sibling_borrow_value = leaf.values.remove(0);
+
+                                            // update keys of internal node
+                                            internal.keys.remove(idx);
+                                            internal.keys.insert(idx, leaf.keys[0]);
+
+                                            // insert borrowed value and key into child
+                                            let current_child 
+                                        }
+                                    }
+                                    Node::Internal(internal) => {
+                                        // TODO implement borrowing logic across multiple internal
+                                        // nodes
+                                        return DeleteResult::Ok;
+                                    }
+                                }
+                                return DeleteResult::Ok;
+                            }
                             DeleteResult::Ok
                         }
                         Option::Some(new_min) => {
                             // Underflow, and assign new min
+                            println!("reached underflow with new_min {}", new_min);
                             if idx > 0 {
                                 internal.keys[idx - 1] = new_min;
                             }

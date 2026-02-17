@@ -1,14 +1,13 @@
 // Example usage of minidb-engine in Next.js/JavaScript
 // This file demonstrates how to use the WASM-compiled B+ tree
 
-import init, { BPlusTreeWrapper, createDemoTree } from './pkg/minidb_engine';
+import init, { BPlusTreeWrapper, createDemoTree } from './pkg/minidb_engine.js';
 
-// Initialize the WASM module
-await init();
 
 // Example 1: Create and use a tree
 const tree = new BPlusTreeWrapper(4); // order = 4
 
+const someKey = "exampleKey"
 // Insert some data (any JSON-serializable values)
 tree.insert({ name: "Alice", age: 30, role: "Engineer" });
 tree.insert({ name: "Bob", age: 25, role: "Designer" });
