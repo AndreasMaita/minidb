@@ -6,6 +6,7 @@ description = "minimalistic database engine"
 license = "MIT"
 
 [lib]
+path = "src/lib.rs"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]

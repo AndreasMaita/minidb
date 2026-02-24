@@ -4,6 +4,9 @@ use crate::models::{BPlusTree, DeleteResult, InternalNode, KeySize, LeafNode, No
 use rand::random;
 use std::vec;
 
+#[cfg(test)]
+mod lib_tests;
+
 impl<V> BPlusTree<V>
 where
     V: std::fmt::Debug + Clone,
@@ -35,6 +38,10 @@ where
     ) -> Option<(KeySize, Box<Node<V>>)> {
         match node {
             Node::Leaf(leaf) => {
+                if leaf.keys.contains(&key) {
+                    return None;
+                }
+
                 leaf.add(key, value);
 
                 if leaf.keys.len() > order {
@@ -99,7 +106,9 @@ where
     ) -> DeleteResult<KeySize> {
         match node {
             Node::Leaf(leaf) => {
-                let pos = leaf.keys.iter().position(|&k| k == key).unwrap();
+                let Some(pos) = leaf.keys.iter().position(|&k| k == key) else {
+                    return DeleteResult::NotFound;
+                };
                 leaf.keys.remove(pos);
                 leaf.values.remove(pos);
 
@@ -138,7 +147,7 @@ where
 
                 let child = internal.children[idx].as_mut();
 
-                let mut result = Self::delete_recursive(child, key, order, min_elements);
+                let result = Self::delete_recursive(child, key, order, min_elements);
 
                 match result {
                     DeleteResult::Empty => {
@@ -213,13 +222,12 @@ where
                                             }
                                         }
                                     }
-                                    Node::Internal(internal) => {
+                                    Node::Internal(_) => {
                                         // TODO implement borrowing logic across multiple internal
                                         // nodes
                                         return DeleteResult::Ok;
                                     }
                                 }
-                                return DeleteResult::Ok;
                             }
                             DeleteResult::Ok
                         }
@@ -325,11 +333,13 @@ where
 }
 
 impl<V> LeafNode<V> {
-    pub fn new(keys: Vec<KeySize>) -> Self {
-        LeafNode {
-            keys,
-            values: Vec::new(),
-        }
+    pub fn new(keys: Vec<KeySize>, values: Vec<V>) -> Self {
+        debug_assert_eq!(
+            keys.len(),
+            values.len(),
+            "keys and values must have the same length"
+        );
+        LeafNode { keys, values }
     }
 
     /// Inserts a key–value pair into this leaf, keeping `keys` and `values` sorted by key.

@@ -98,15 +98,15 @@ This generates a random `u8` key and starts the recursive insertion at the root.
 
 ## TODO List
 
-### Phase 1: Core B+ Tree Operations ✅ (Partially Complete)
+### Phase 1: Core B+ Tree Operations ✅
 
 - [x] B+ Tree data structures (`InternalNode`, `LeafNode`)
 - [x] Insert with recursive splitting
 - [x] Root split handling
 - [x] **Get operation** (`get(&self, key: u8) -> Option<&V>`)
 - [x] **Update operation** (update value for existing key)
-- [ ] **Delete operation** (with merge/rebalance logic)
-- [ ] Handle duplicate keys (overwrite vs. reject)
+- [x] **Delete operation** (with merge/rebalance logic)
+- [x] Handle duplicate keys (overwrite vs. reject)
 - [x] Configurable key type (beyond `u8`)
 - [ ] Unit tests for insert, get, update, delete
 

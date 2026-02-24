@@ -22,7 +22,7 @@ struct MyApp {
 
 impl Default for MyApp {
     fn default() -> Self {
-        let root = Node::Leaf(LeafNode::new(Vec::new()));
+        let root = Node::Leaf(LeafNode::new(Vec::new(), Vec::new()));
         Self {
             tree: BPlusTree::new(2, 4, root, Vec::new()),
             value_input: String::new(),
