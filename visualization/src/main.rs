@@ -16,7 +16,7 @@ fn main() -> Result<(), eframe::Error> {
 struct MyApp {
     tree: BPlusTree<MyRow>,
     value_input: String,
-    key_input: String,
+    primary_key_input: String,
     update_input: String,
 }
 
@@ -26,7 +26,7 @@ impl Default for MyApp {
         Self {
             tree: BPlusTree::new(2, 4, root, Vec::new()),
             value_input: String::new(),
-            key_input: String::new(),
+            primary_key_input: String::new(),
             update_input: String::new(),
         }
     }
@@ -52,42 +52,42 @@ impl eframe::App for MyApp {
                         self.value_input.clear();
                     }
                     ui.label("Search key: ");
-                    ui.text_edit_singleline(&mut self.key_input);
+                    ui.text_edit_singleline(&mut self.primary_key_input);
                     if ui.button("Search").clicked() {
-                        let key = std::mem::take(&mut self.key_input);
-                        let value = self.tree.get(key.parse::<KeySize>().unwrap());
+                        let primary_key = std::mem::take(&mut self.primary_key_input);
+                        let value = self.tree.get(primary_key.parse::<KeySize>().unwrap());
 
                         match value {
-                            None => self.key_input = "nothing found!".to_string(),
-                            Some(val) => self.key_input = val.to_string(),
+                            None => self.primary_key_input = "nothing found!".to_string(),
+                            Some(val) => self.primary_key_input = val.to_string(),
                         }
                     }
                 });
                 ui.separator();
                 ui.horizontal(|ui| {
                     ui.label("replace key: ");
-                    ui.text_edit_singleline(&mut self.key_input);
+                    ui.text_edit_singleline(&mut self.primary_key_input);
                     ui.label("with Value: ");
                     ui.text_edit_singleline(&mut self.update_input);
                     if ui.button("update").clicked() {
-                        let key = std::mem::take(&mut self.key_input);
+                        let primary_key = std::mem::take(&mut self.primary_key_input);
                         let obj = MyRow {
                             name: self.update_input.clone(),
                             age: 0,
                         };
 
                         self.tree
-                            .update(key.parse::<KeySize>().unwrap(), obj.clone());
+                            .update(primary_key.parse::<KeySize>().unwrap(), obj.clone());
                     }
                 });
 
                 ui.separator();
                 ui.horizontal(|ui| {
                     ui.label("delete key: ");
-                    ui.text_edit_singleline(&mut self.key_input);
+                    ui.text_edit_singleline(&mut self.primary_key_input);
 
                     if ui.button("delete").clicked() {
-                        let key = std::mem::take(&mut self.key_input);
+                        let key = std::mem::take(&mut self.primary_key_input);
                         self.tree.delete_value(key.parse::<KeySize>().unwrap());
                     }
                 });

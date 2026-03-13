@@ -108,6 +108,7 @@ This generates a random `u8` key and starts the recursive insertion at the root.
 - [x] **Delete operation** (with merge/rebalance logic)
 - [x] Handle duplicate keys (overwrite vs. reject)
 - [x] Configurable key type (beyond `u8`)
+- [ ] add key to arena known key to arena
 - [ ] Unit tests for insert, get, update, delete
 
 ### Phase 2: Database Table Layer

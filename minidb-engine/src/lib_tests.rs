@@ -57,6 +57,33 @@ mod tests {
             assert!(result.is_some());
             assert_eq!(result.unwrap(), &"single_value".to_string());
         }
+
+        // This test adds enough elements, so that we can verify that splitting and leaf creation
+        // works
+        #[test]
+        fn test_tree_with_many_elements() {
+            let root = Node::Leaf(LeafNode {
+                keys: vec![42, 43, 44, 45],
+                values: vec![
+                    "first".to_string(),
+                    "second".to_string(),
+                    "third".to_string(),
+                    "fourth".to_string(),
+                ],
+            });
+
+            let tree = BPlusTree::new(2, 3, root, vec![]);
+
+            assert_eq!(tree.order, 3);
+            assert_eq!(tree.min_elements, 2);
+
+            // Test getting the value
+            let result = tree.get(42);
+            let size = tree.arena.len();
+            assert!(result.is_some());
+            assert_eq!(size, 2);
+            assert_eq!(result.unwrap(), &"first".to_string());
+        }
     }
 
     /// Tests for leaf node operations
