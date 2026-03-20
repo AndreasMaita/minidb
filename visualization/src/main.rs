@@ -2,7 +2,8 @@ pub mod models;
 
 use crate::models::row::MyRow;
 use eframe::egui;
-use minidb_engine::models::{BPlusTree, KeySize, LeafNode, Node};
+use minidb_engine::indexing::btree::BPlusTree;
+use minidb_engine::indexing::node::*;
 
 fn main() -> Result<(), eframe::Error> {
     let options = eframe::NativeOptions::default();

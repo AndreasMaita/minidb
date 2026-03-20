@@ -1,6 +1,10 @@
 mod models;
 
 use clap::Parser;
+use minidb_engine::indexing::{
+    btree::BPlusTree,
+    node::{LeafNode, Node},
+};
 use models::command::*;
 use rustyline::DefaultEditor;
 
@@ -55,7 +59,17 @@ fn handle_cli_command(cli: CLI) {
             CreateCommand::Table { name, database } => {
                 println!("printing table: {}, into database: {}", name, database)
             }
-            CreateCommand::Database { name } => println!("creating database {}", name),
+            CreateCommand::Database { name } => {
+                BPlusTree::new(
+                    5,
+                    4,
+                    Node::Leaf::<MyValue>(LeafNode::new(Vec::new(), Vec::new())),
+                    Vec::new(),
+                );
+            }
         },
     }
 }
+
+#[derive(Debug, Clone)]
+struct MyValue {}
